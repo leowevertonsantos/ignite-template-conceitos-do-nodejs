@@ -19,7 +19,7 @@ function checksExistsUserAccount(request, response, next) {
   if (!user) {
     return response
       .status(400)
-      .json({ error: `user not found with username ${username}.` });
+      .json({ error: `User not found with username ${username}.` });
   }
 
   request.user = user;
@@ -29,6 +29,15 @@ function checksExistsUserAccount(request, response, next) {
 // Create a new User
 app.post("/users", (request, response) => {
   const user = request.body;
+  const userFounded = users.find(
+    (userItem) => userItem.username === user.username
+  );
+
+  if (userFounded) {
+    return response
+      .status(400)
+      .json({ error: "Already exist user with username informed.s" });
+  }
 
   if (!user.name || !user.username) {
     return response
@@ -44,15 +53,14 @@ app.post("/users", (request, response) => {
   };
 
   users.push(userToInsert);
-
-  return response.status(201).end();
+  return response.status(201).json(userToInsert);
 });
 
 // Find all TODO's by username
 app.get("/todos", checksExistsUserAccount, (request, response) => {
   const { todos } = request.user;
 
-  response.status(200).json({ data: todos });
+  response.status(200).json(todos);
 });
 
 // Create a new TODO to user with received username
@@ -76,7 +84,7 @@ app.post("/todos", checksExistsUserAccount, (request, response) => {
 
   user.todos.push(todoToInsert);
 
-  return response.status(201).end();
+  return response.status(201).json(todoToInsert);
 });
 
 // Update Todo informations by id
@@ -95,7 +103,7 @@ app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
 
   if (indexTodo < 0) {
     return response
-      .status(400)
+      .status(404)
       .json({ error: `Todo not found with id ${id} for received user.` });
   }
 
@@ -105,7 +113,7 @@ app.put("/todos/:id", checksExistsUserAccount, (request, response) => {
     deadline: new Date(deadline),
   };
 
-  return response.status(204).end();
+  return response.status(201).json(user.todos[indexTodo]);
 });
 
 // Update Todo to DONE
@@ -117,13 +125,13 @@ app.patch("/todos/:id/done", checksExistsUserAccount, (request, response) => {
 
   if (indexTodo < 0) {
     return response
-      .status(400)
+      .status(404)
       .json({ error: `Todo not found with id ${id} for received user.` });
   }
 
   user.todos[indexTodo].done = true;
 
-  return response.status(204).end();
+  return response.status(201).json(user.todos[indexTodo]);
 });
 
 // Delete Todo by id
@@ -135,7 +143,7 @@ app.delete("/todos/:id", checksExistsUserAccount, (request, response) => {
 
   if (indexTodo < 0) {
     return response
-      .status(400)
+      .status(404)
       .json({ error: `Todo not found with id ${id} for received user.` });
   }
 
